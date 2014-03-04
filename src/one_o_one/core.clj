@@ -10,7 +10,11 @@
   (/ 1 (+ 1 (mathf/exp (- x)))))
 
 (defn derivative-activation-function
-  "derivative of the activation function for back-propagation"
+  "derivative of the activation function for back-propagation
+   note: 'y' is a vector, (corresponding to 'a^(super-script)'
+         '1' is a vector of 1s [[1] [1] ... [1]] (thanks to broadcast)
+         y .* (1 - y) is an element-wise multiplication
+         this formula is equivalent to g'(z^(supper-script))"
   [y]
   (* y (- 1 y)))
 
@@ -52,15 +56,49 @@
    then normalize it with the sigmoid function"
   [theta in]
   (let [in-biais (array (cons [1] in))]
+    ;; TODO: refactor with mapv
     (map (fn [[x]] [(activation-function x)]) (mmul theta in-biais))))
+
+;; (defn forward-propagation-only
+;;   "run forward-propagation on a neural network with the given input
+;;    the biais is automatically added (and thus should not be provided)"
+;;   [[theta & net] in]
+;;   (if (nil? theta)
+;;     in
+;;     (recur net (add-biais-and-propagate theta in))))
 
 (defn forward-propagation
   "run forward-propagation on a neural network with the given input
    the biais is automatically added (and thus should not be provided)"
   [[theta & net] in]
   (if (nil? theta)
-    in
-    (recur net (add-biais-and-propagate theta in))))
+    []
+    (let [next-in (add-biais-and-propagate theta in)]
+      (conj (forward-propagation net next-in) next-in))))
+
+(defn cost-output
+  "calculate the cost (error) on the output layer"
+  [out expected]
+  (- out expected))
+
+(defn- backward-propagation-rec
+  "calculates the deltas for each layer"
+  [[weights & net] [a & forward-proped] deltas]
+  (if (nil? a)
+    '()
+    (let [t-theta-delta (rest (mmul (transpose weights) deltas))
+          nodes-error   (* t-theta-delta
+                           ;; TODO: refactor with mapv
+                           (map (fn [[y]] [(derivative-activation-function y)]) a))]
+      (conj (backward-propagation-rec net forward-proped nodes-error)
+            nodes-error))))
+
+(defn backward-propagation
+  "run backward-propagation on the return of forward-propagation"
+  [net [out & forward-propagated] expected]
+  (let [out-error (cost-output out expected)]
+    (conj (backward-propagation-rec (reverse net) forward-propagated out-error)
+          out-error)))
 
 
 ;; (pm (make-random-matrix 4 5))

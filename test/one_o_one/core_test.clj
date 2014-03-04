@@ -65,6 +65,23 @@
           new-net  (unserialize-neural-network filename)]
       (is (= net new-net)))))
 
+;;; forward-propagation-only
+;; (deftest forward-propagation-only-test
+;;   (testing "forward propagation only"
+;;     (with-redefs [activation-function (fn [x] (* 2 x))]
+;;       (let [in         [[2]
+;;                         [3]]
+;;             net-layer1 [[4  5  6]
+;;                         [7  8  9]
+;;                         [10 11 12]]
+;;             net-layer2 [[13 14 15 16]
+;;                         [17 18 19 20]]
+;;             net        [net-layer1 net-layer2]
+;;             wanted     [[9170]
+;;                         [11578]]
+;;             res        (forward-propagation-only net in)]
+;;         (is (= res wanted))))))
+
 (deftest forward-propagation-test
   (testing "forward propagation"
     (with-redefs [activation-function (fn [x] (* 2 x))]
@@ -78,9 +95,33 @@
             net        [net-layer1 net-layer2]
             wanted     [[9170]
                         [11578]]
-            res        (forward-propagation net in)]
-        (is (= res wanted))))))
+            ret        (forward-propagation net in)
+            res        (first ret)]
+        (is (= res wanted))
+        (is (= 2 (count ret)))))))
 
+(deftest cost-output-test
+  (testing "cost-output"
+    (let [out      [[0.1] [0.2] [0.75]]
+          expected [[0] [0] [1]]]
+      (is (= [[0.1] [0.2] [-0.25]] (cost-output out expected))))))
 
-
+(deftest backward-propagation-test
+  (testing "backward propagation"
+    (with-redefs [derivative-activation-function (fn [y] (* -2 y))]
+      (let [in          [[2]
+                         [3]]
+            net-layer1  [[40 50 60]
+                         [70 80 90]
+                         [10 11 12]]
+            net-layer2  [[10 1 2 3]
+                         [20 4 5 6]]
+            net         [net-layer1 net-layer2]
+            forward-res [[[1] [8]]
+                         [[7] [8] [9]]]
+            expected    [[0] [10]]
+            wanted      [[[1] [-2]]
+                         [[98] [128] [162]]]
+            ret         (backward-propagation net forward-res expected)]
+        (is (= wanted ret))))))
 
