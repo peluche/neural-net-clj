@@ -5,8 +5,6 @@
             [clojure.core.matrix.operators :refer :all]
             [clojure.data.json :as json]))
 
-(def learning-rate 0.1)
-
 (defn activation-function
   "the sigmoid activation function"
   [x]
@@ -26,6 +24,9 @@
    (for testing purpose, don't use for real learning)"
   [x epsilon activ]
   (/ (- (activ (+ x epsilon)) (activ (- x epsilon))) (* 2 epsilon)))
+
+(defn test-gradient [x]
+  (gradient-checking x 0.001 activation-function))
 
 (defn make-random-matrix
   "return a (n x m) matrix filled with random values"
@@ -58,18 +59,8 @@
    then normalize it with the sigmoid function"
   [theta in]
   (let [in-biais (array (cons [1] in))]
-    ;; TODO: refactor with mapv
-    ;; (println "add-biais-and-propagate == theta: " theta)
-    ;; (println "add-biais-and-propagate == in-biais: " in-biais)
-    (map (fn [[x]] [(activation-function x)]) (mmul theta in-biais))))
-
-;; (defn forward-propagation-only
-;;   "run forward-propagation on a neural network with the given input
-;;    the biais is automatically added (and thus should not be provided)"
-;;   [[theta & net] in]
-;;   (if (nil? theta)
-;;     in
-;;     (recur net (add-biais-and-propagate theta in))))
+    ;; TODO: refactor maybe?
+    (mapv (fn [[x]] [(activation-function x)]) (mmul theta in-biais))))
 
 (defn forward-propagation
   "run forward-propagation on a neural network with the given input
@@ -87,13 +78,13 @@
 
 (defn- backward-propagation-rec
   "calculates the deltas for each layer"
-  [[weights & net] [a & forward-proped] deltas]
+  [[weights & net] [a & forward-proped] error]
   (if (nil? a)
     []
-    (let [t-theta-delta (rest (mmul (transpose weights) deltas))
+    (let [t-theta-delta (rest (mmul (transpose weights) error))
           nodes-error   (* t-theta-delta
-                           ;; TODO: refactor with mapv
-                           (map (fn [[y]] [(derivative-activation-function y)]) a))]
+                           ;; TODO: refactor maybe ?
+                           (mapv (fn [[y]] [(derivative-activation-function y)]) a))]
       (conj (backward-propagation-rec net forward-proped nodes-error)
             nodes-error))))
 
@@ -119,16 +110,16 @@
   [[w & net] [d & deltas] [v & vals] learning-rate]
   (if (nil? w)
     '()
-    (conj (calc-delta-net net deltas vals learning-rate)
-          (el-wise-mul (* w
-                          (biais-trans v)
-                          learning-rate)
-                       d))))
+    (let [activation-levels (transpose (cons [1] v))
+          weights-change    (mmul d activation-levels)
+          new-weights       (* learning-rate weights-change)]
+      (conj (calc-delta-net net deltas vals learning-rate)
+            new-weights))))
 
 (defn helper-test-loop
   "run one exemple n times and output error"
-  [in expected rate iterations]
-  (loop [net  (make-neural-network [2 3 4])
+  [in expected rate iterations initial-net]
+  (loop [net  initial-net
          iter iterations]
     (let [prop       (forward-propagation net in)
           error      (cost-output (first prop) expected)
@@ -136,40 +127,50 @@
           vals       (cons in (reverse prop))
           big-deltas (calc-delta-net net deltas vals rate)
           new-net    (clojure.core.matrix.operators/- net big-deltas)]
-      (pm (first prop))
+      ;; (pm (first prop))
       (if (> iter 0)
         (recur new-net (dec iter))
-        (pm (first prop))))))
+        prop))))
+
+;; =====================
+;; manual testing
+;; =====================
+;; (let [net        (unserialize-neural-network "/tmp/test.net")
+;;       in         [[1] [0]]
+;;       rate       1
+;;       prop       (forward-propagation net in)
+;;       expected   [[0] [1]]
+;;       error      (cost-output (first prop) expected)
+;;       deltas     (backward-propagation net prop expected)
+;;       _ (println "backward-propagation: " deltas)
+;;       vals       (cons in (reverse prop))
+;;       big-deltas (calc-delta-net net deltas vals rate)
+;;       new-net    (clojure.core.matrix.operators/- net big-deltas)]
+      
+;;   (println "res: ")
+;;   (pm (first prop))
+;;   (println "net: ")
+;;   (pm (first net))
+;;   (println "big-deltas: ")
+;;   (pm (first big-deltas))
+;;   (println "new-net: ")
+;;   (pm (first new-net))
+;;   (println "next-res: ")
+;;   (pm (first (forward-propagation new-net in))))
 
 
+;; (defn mmm [iter]
+;;   (let [in  (array (repeat 400 [1]))
+;;         out (array (repeat 400 [0.5]))
+;;         net (make-neural-network [400 400 400])]
+;;     (time (do
+;;             (helper-test-loop in out 0.1 iter net)
+;;             nil))))
 
-;; (let [A [[1 2 3 4]
-;;          [5 6 7 8]]
-;;       B [[2]
-;;          [3]]]
-;;   (abc A B))
-
-;; (pm (make-random-matrix 4 5))
-;; (def net (make-neural-network [4 3 2]))
-;; (serialize-neural-network "/tmp/serial-neural-net.test" (inc 1e-12))
-;; (unserialize-neural-network "/tmp/serial-neural-net.test")
-;; ((fn [[theta & net]] net) nil)
-
-
-;; (* [[1 2 3] [4 5 6]]
-;;    (biais-trans [[2] [3]]))
-
-;; (* [[1 2 3] [4 5 6]]
-;;    (biais-trans [[2] [3]])
-;;    [1 2 3])
-
-;; (let [w [[1 2 3] [4 5 6] [7 8 9]]
-;;       d [[4] [5] [6]]
-;;       d- (transpose d)]
-;;   (pm w)
-;;   (pm d)
-;;   (pm d-)
-;;   (pm (* w (first d-)))
-;;   )
-
-;; (transpose (matrix [[1] [2] [3] [4]]))
+;; =====================
+;; broadcast
+;; =====================
+;; (* [[1 2 3 4]  
+;;     [5 6 7 8]]
+;;    (mapv (fn [[x]] (repeat 4 x))
+;;          [[2] [3]]))

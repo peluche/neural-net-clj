@@ -125,60 +125,47 @@
             ret         (backward-propagation net forward-res expected)]
         (is (= wanted ret))))))
 
-(deftest calc-delta-net-test
-  (testing "update the net weights"
-    (let [learning-rate  2 ;; i want to keep results as integers
-          in             [[2]
-                          [3]]
-          net-layer1     [[40 50 60]
-                          [70 80 90]
-                          [10 11 12]]
-          net-layer2     [[10 1 2 3]
-                          [20 4 5 6]]
-          net            [net-layer1 net-layer2]
-          deltas         [[[21] [31] [41]]
-                          [[4] [7]]]
-          forward-proped [[[9170] [11578]] [[64] [100] [136]]]
-          vals           (cons in (reverse forward-proped))
-          ret           (calc-delta-net net deltas vals learning-rate)
-          expected      [[[1680    4200    7560]
-                          [4340    9920   16740]
-                          [ 820    1804    2952]]
+;; (deftest calc-delta-net-test
+;;   (testing "update the net weights"
+;;     (let [learning-rate  2 ;; i want to keep results as integers
+;;           in             [[2]
+;;                           [3]]
+;;           net-layer1     [[40 50 60]
+;;                           [70 80 90]
+;;                           [10 11 12]]
+;;           net-layer2     [[10 1 2 3]
+;;                           [20 4 5 6]]
+;;           net            [net-layer1 net-layer2]
+;;           deltas         [[[21] [31] [41]]
+;;                           [[4] [7]]]
+;;           forward-proped [[[9170] [11578]] [[64] [100] [136]]]
+;;           vals           (cons in (reverse forward-proped))
+;;           ret           (calc-delta-net net deltas vals learning-rate)
+;;           expected      [[[1680    4200    7560]
+;;                           [4340    9920   16740]
+;;                           [ 820    1804    2952]]
 
-                         [[80     512    1600    3264]
-                          [280    3584    7000   11424]]]]
-      (is (= ret expected)))))
+;;                          [[80     512    1600    3264]
+;;                           [280    3584    7000   11424]]]]
+;;       (is (= ret expected)))))
 
 (deftest loop-it-baby
-  (testing "yay"
-    (helper-test-loop [[1] [0]]
-                  [[1] [0] [1] [0]]
-                  0.1
-                  100)
-))
-
-;; (deftest learn-test
-;;   (testing "learning"
-;;     (let [net        (make-neural-network [2 3 4])
-;;           _          (println "_ net: " net)
-;;           in         [[1] [0]]
-;;           expected   [[0] [0] [1] [0]]
-;;           rate       0.1
-;;           prop       (forward-propagation net in)
-;;           _          (println "_ prop: " prop)
-;;           _          (println "_ error: " (cost-output (first prop) expected))
-;;           deltas     (backward-propagation net prop expected)
-;;           _          (println "_ deltas: " deltas)
-;;           vals       (cons in (reverse prop))
-;;           _          (println "_ vals: " vals)
-;;           big-deltas (calc-delta-net net deltas vals rate)
-;;           _          (println "_ big-deltas: " big-deltas)
-;;           new-net    (clojure.core.matrix.operators/+ net big-deltas)
-;;           _          (println "_ new-net: " new-net)
-;;           prop2      (forward-propagation new-net in)
-;;           _          (println "_ prop2: " prop2)
-;;           _          (println "_ error2: " (cost-output (first prop2) expected))
-;;           ])))
-
+  (testing "non-regression test"
+    (let [net  [[[0.44 0.18 0.32]
+                 [0.40 0.24 0.29]
+                 [0.64 0.45 0.62]]
+               
+                [[0.72 0.71 0.15 0.03]
+                 [0.28 0.94 0.11 0.07]
+                 [0.64 0.53 0.06 0.82]
+                 [0.92 0.03 0.40 0.59]]]
+          in   [[1] [0]]
+          out  [[0] [1] [1] [0]]
+          rate 0.3
+          iter 15
+          ret  (helper-test-loop in out 0.3 iter net)]
+      (is (= ret
+             [[[0.09463351132639372] [0.9371167956242776] [0.9469569426446957] [0.0969249559309502]]
+              [[0.7533369989150758] [0.7192067469930032] [0.8125626854366405]]])))))
 
 
