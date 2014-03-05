@@ -120,8 +120,65 @@
             forward-res [[[1] [8]]
                          [[7] [8] [9]]]
             expected    [[0] [10]]
-            wanted      [[[1] [-2]]
-                         [[98] [128] [162]]]
+            wanted      [[[98] [128] [162]]
+                         [[1] [-2]]]
             ret         (backward-propagation net forward-res expected)]
         (is (= wanted ret))))))
+
+(deftest calc-delta-net-test
+  (testing "update the net weights"
+    (let [learning-rate  2 ;; i want to keep results as integers
+          in             [[2]
+                          [3]]
+          net-layer1     [[40 50 60]
+                          [70 80 90]
+                          [10 11 12]]
+          net-layer2     [[10 1 2 3]
+                          [20 4 5 6]]
+          net            [net-layer1 net-layer2]
+          deltas         [[[21] [31] [41]]
+                          [[4] [7]]]
+          forward-proped [[[9170] [11578]] [[64] [100] [136]]]
+          vals           (cons in (reverse forward-proped))
+          ret           (calc-delta-net net deltas vals learning-rate)
+          expected      [[[1680    4200    7560]
+                          [4340    9920   16740]
+                          [ 820    1804    2952]]
+
+                         [[80     512    1600    3264]
+                          [280    3584    7000   11424]]]]
+      (is (= ret expected)))))
+
+(deftest loop-it-baby
+  (testing "yay"
+    (helper-test-loop [[1] [0]]
+                  [[1] [0] [1] [0]]
+                  0.1
+                  100)
+))
+
+;; (deftest learn-test
+;;   (testing "learning"
+;;     (let [net        (make-neural-network [2 3 4])
+;;           _          (println "_ net: " net)
+;;           in         [[1] [0]]
+;;           expected   [[0] [0] [1] [0]]
+;;           rate       0.1
+;;           prop       (forward-propagation net in)
+;;           _          (println "_ prop: " prop)
+;;           _          (println "_ error: " (cost-output (first prop) expected))
+;;           deltas     (backward-propagation net prop expected)
+;;           _          (println "_ deltas: " deltas)
+;;           vals       (cons in (reverse prop))
+;;           _          (println "_ vals: " vals)
+;;           big-deltas (calc-delta-net net deltas vals rate)
+;;           _          (println "_ big-deltas: " big-deltas)
+;;           new-net    (clojure.core.matrix.operators/+ net big-deltas)
+;;           _          (println "_ new-net: " new-net)
+;;           prop2      (forward-propagation new-net in)
+;;           _          (println "_ prop2: " prop2)
+;;           _          (println "_ error2: " (cost-output (first prop2) expected))
+;;           ])))
+
+
 
