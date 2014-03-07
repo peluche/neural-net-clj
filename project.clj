@@ -4,5 +4,6 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojure-contrib "1.2.0"]
                  [net.mikera/core.matrix "0.20.0"]
-                 [org.clojure/data.json "0.2.4"]]
+                 [org.clojure/data.json "0.2.4"]
+                 [net.mikera/vectorz-clj "0.20.0"]]
   :plugins [[com.jakemccrary/lein-test-refresh "0.3.4"]])

@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [one-o-one.core :refer :all]
             [clojure.contrib.generic.math-functions :refer [approx=]]
-            [clojure.core.matrix :refer [shape mget]]))
+            [clojure.core.matrix :refer [shape mget matrix]]))
 
 (deftest activation-function-test
   (testing "activation-function tend to ]0-1["
@@ -93,8 +93,8 @@
             net-layer2 [[13 14 15 16]
                         [17 18 19 20]]
             net        [net-layer1 net-layer2]
-            wanted     [[9170]
-                        [11578]]
+            wanted     [[9170.0]
+                        [11578.0]]
             ret        (forward-propagation net in)
             res        (first ret)]
         (is (= res wanted))
