@@ -80,6 +80,11 @@
     (let [next-in (add-biais-and-propagate theta in)]
       (conj (forward-propagation net next-in) next-in))))
 
+(defn run-input
+  "pass an input to the neural-network and return the output"
+  [net in]
+  (first (forward-propagation net in)))
+
 (defn cost-output
   "calculate the cost (error) on the output layer"
   [out expected]
@@ -157,6 +162,22 @@
         (if (> iter 0)
           (recur new-net (dec iter))
           prop)))))
+
+(defn train
+  "train a neural-network with a training set one element at a time
+   and return the trained network"
+  [net [[in out] & datas] learning-rate]
+  (let [in         (column-matrix in)
+        out        (column-matrix out)
+        prop       (forward-propagation net in)
+        deltas     (backward-propagation net prop out)
+        vals       (cons in (reverse prop))
+        big-deltas (calc-delta-net net deltas vals learning-rate)
+        new-net    (map - net big-deltas)]
+    (if (nil? datas)
+      new-net
+      (recur new-net datas learning-rate))))
+
 
 (fn []
 
