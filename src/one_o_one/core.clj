@@ -33,11 +33,12 @@
   (/ (- (activ (+ x epsilon)) (activ (- x epsilon))) (* 2 epsilon)))
 
 (defn make-random-matrix
-  "return a (n x m) matrix filled with random values"
+  "return a (n x m) matrix filled with random values
+   (using list comprehension instead of using a reshape is 10x faster)"
   [n m]
-  (matrix (array (for [i (range n)]
-                   (for [j (range m)]
-                     (rand))))))
+  (matrix (for [i (range n)]
+            (for [j (range m)]
+              (rand)))))
 
 (defn make-neural-network
   "return a representation of a neural network
@@ -202,3 +203,20 @@
 
 ;; (vector-of)
 ;; (keys (ns-publics 'clojure.core.matrix))
+
+;; ==============================
+;; benchmark for matrix creation
+;; ==============================
+;; (let [n 400 m 400]
+;;   (time
+;;    (dotimes [n 100]
+;;      ;; == 3000 ms ==
+;;      (reshape (matrix (repeatedly (* n m) rand)) [n m])
+;;      ;; == 8500 ms ==
+;;      (matrix (reshape (repeatedly (* n m) rand) [n m]))
+;;      ;; == 500 ms ==
+;;      (matrix (for [i (range n)]
+;;                (for [j (range m)]
+;;                  (rand))))
+;;      ))
+;;   nil)
