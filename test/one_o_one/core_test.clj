@@ -171,21 +171,27 @@
 ;; ==========
 ;; slow test
 ;; ==========
-;; (deftest learn-test
-;;   (testing "learning the XOR function"
-;;     (let [gen-xor-dataset  (fn []
-;;                              (let [in1 (Math/round (rand))
-;;                                    in2 (Math/round (rand))
-;;                                    out (bit-xor in1 in2)]
-;;                                [[in1 in2] [out]]))
-;;           approx-col=      (fn [a b eps]
-;;                              (reduce #(and %1 %2)
-;;                                      (map (fn [m n] (approx= (first m) n eps)) a b)))
-;;           dataset          (repeatedly 10000 gen-xor-dataset)
-;;           net              (make-neural-network [2 3 1])
-;;           trained-net      (train net dataset 0.2)]
-;;       (is (approx-col= (run-input trained-net [[0] [0]]) [0] 0.1))
-;;       (is (approx-col= (run-input trained-net [[0] [1]]) [1] 0.1))
-;;       (is (approx-col= (run-input trained-net [[1] [0]]) [1] 0.1))
-;;       (is (approx-col= (run-input trained-net [[1] [1]]) [0] 0.1)))))
+(deftest learn-test
+  (testing "learning the XOR function"
+    (let [gen-xor-dataset  (fn []
+                             (let [in1 (Math/round (rand))
+                                   in2 (Math/round (rand))
+                                   out (bit-xor in1 in2)]
+                               [[in1 in2] [out]]))
+          approx-col=      (fn [a b eps]
+                             (reduce #(and %1 %2)
+                                     (map (fn [m n] (approx= (first m) n eps)) a b)))
+          dataset          (repeatedly 10000 gen-xor-dataset)
+          ;; net              (make-neural-network [2 3 1])
+          net              (make-neural-network [2 2 1])
+          trained-net      (train net dataset 0.2)]
+      ;; (is (= 0 (run-input trained-net [[0] [0]])))
+      ;; (is (= 1 (run-input trained-net [[0] [1]])))
+      ;; (is (= 1 (run-input trained-net [[1] [0]])))
+      ;; (is (= 0 (run-input trained-net [[1] [1]])))
+      (is (approx-col= (run-input trained-net [[0] [0]]) [0] 0.1))
+      (is (approx-col= (run-input trained-net [[0] [1]]) [1] 0.1))
+      (is (approx-col= (run-input trained-net [[1] [0]]) [1] 0.1))
+      (is (approx-col= (run-input trained-net [[1] [1]]) [0] 0.1))
+)))
 

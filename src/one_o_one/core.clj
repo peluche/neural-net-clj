@@ -34,11 +34,10 @@
 
 (defn make-random-matrix
   "return a (n x m) matrix filled with random values
-   (using list comprehension instead of using a reshape is 10x faster)"
+   according to my benchmark:
+   compute-matrix > clojure list comprehension > reshape 1d vector"
   [n m]
-  (matrix (for [i (range n)]
-            (for [j (range m)]
-              (rand)))))
+  (compute-matrix [n m] (fn [_ _] (rand))))
 
 (defn make-neural-network
   "return a representation of a neural network
@@ -180,7 +179,7 @@
 
 
 (fn []
-
+compute-matrix
   (let [iter 100
         in  (array (repeat 400 [1]))
         out (array (repeat 400 [0.5]))
@@ -231,13 +230,15 @@
 ;; (let [n 400 m 400]
 ;;   (time
 ;;    (dotimes [n 100]
-;;      ;; == 3000 ms ==
-;;      (reshape (matrix (repeatedly (* n m) rand)) [n m])
-;;      ;; == 8500 ms ==
-;;      (matrix (reshape (repeatedly (* n m) rand) [n m]))
-;;      ;; == 500 ms ==
-;;      (matrix (for [i (range n)]
-;;                (for [j (range m)]
-;;                  (rand))))
+;;      ;; ;; == 3000 ms ==
+;;      ;; (reshape (matrix (repeatedly (* n m) rand)) [n m])
+;;      ;; ;; == 8500 ms ==
+;;      ;; (matrix (reshape (repeatedly (* n m) rand) [n m]))
+;;      ;; ;; == 500 ms ==
+;;      ;; (matrix (for [i (range n)]
+;;      ;;           (for [j (range m)]
+;;      ;;             (rand))))
+;;      ;; == 150 ==
+;;      ;; (compute-matrix [n m] (fn [a b] (rand)))
 ;;      ))
 ;;   nil)
